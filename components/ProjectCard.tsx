@@ -9,17 +9,19 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/project/${project.id}`}
-      className="block rounded border border-border bg-card p-4 transition hover:border-link"
+      className="cyber-panel block rounded-xl p-5 transition hover:-translate-y-0.5 hover:border-link/80 hover:shadow-glow"
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm text-zinc-100">{project.title}</h3>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <h3 className="text-lg font-semibold text-zinc-100">{project.title}</h3>
         <StatusBadge status={computedStatus} />
       </div>
-      <p className="mb-3 line-clamp-2 text-[10px] text-zinc-400">
-        {project.description || 'No description'}
+
+      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-zinc-300">
+        {project.description || 'No description provided yet.'}
       </p>
-      <div className="flex flex-wrap items-center gap-2 text-[10px] text-zinc-500">
-        <span>{project.engine}</span>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+        <span className="rounded-full border border-border bg-cardAlt/80 px-2.5 py-1">{project.engine}</span>
         <span>•</span>
         <span>{project.start_date || 'TBD'}</span>
         <span>→</span>

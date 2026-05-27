@@ -17,12 +17,12 @@ export function getProjectStatus(project: Project): Project['status'] {
 export function statusBadgeClass(status: Project['status']): string {
   switch (status) {
     case 'active':
-      return 'bg-active/20 text-active border-active/50';
+      return 'border-emerald-400/60 bg-emerald-400/15 text-emerald-300';
     case 'completed':
-      return 'bg-completed/20 text-completed border-completed/50';
+      return 'border-fuchsia-400/60 bg-fuchsia-400/15 text-fuchsia-200';
     case 'upcoming':
-      return 'bg-link/20 text-link border-link/50';
+      return 'border-sky-400/60 bg-sky-400/15 text-sky-200';
     default:
-      return 'bg-zinc-700/40 text-zinc-300 border-zinc-500';
+      return 'border-zinc-500/70 bg-zinc-700/40 text-zinc-200';
   }
 }

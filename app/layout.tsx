@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0d1117',
+  themeColor: '#050712',
   width: 'device-width',
   initialScale: 1,
 };
@@ -16,8 +16,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-bg text-zinc-100">
-        <main className="mx-auto min-h-screen max-w-[1600px] p-4 md:p-8">{children}</main>
+      <body className="text-zinc-100">
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-grid bg-[size:42px_42px] opacity-25" />
+        <main className="mx-auto min-h-screen max-w-[1480px] px-4 py-6 md:px-8 md:py-10">{children}</main>
       </body>
     </html>
   );

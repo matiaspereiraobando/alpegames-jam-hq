@@ -16,17 +16,17 @@ import { Task, TaskColumn } from '@/lib/types';
 import { TaskForm } from './TaskForm';
 
 const columnStyles: Record<TaskColumn, string> = {
-  backlog: 'border-zinc-600 bg-zinc-700/10',
-  todo: 'border-link/60 bg-link/10',
-  in_progress: 'border-active/60 bg-active/10',
-  done: 'border-completed/60 bg-completed/10',
+  backlog: 'border-zinc-500/60 bg-zinc-900/35',
+  todo: 'border-sky-400/50 bg-sky-500/10',
+  in_progress: 'border-emerald-400/50 bg-emerald-500/10',
+  done: 'border-fuchsia-400/55 bg-fuchsia-500/12',
 };
 
 const tagStyles: Record<TaskColumn, string> = {
-  backlog: 'bg-zinc-700 text-zinc-300',
-  todo: 'bg-link/30 text-link',
-  in_progress: 'bg-active/30 text-active',
-  done: 'bg-completed/30 text-completed',
+  backlog: 'border-zinc-500/60 bg-zinc-700/35 text-zinc-200',
+  todo: 'border-sky-400/70 bg-sky-500/20 text-sky-100',
+  in_progress: 'border-emerald-400/70 bg-emerald-500/20 text-emerald-100',
+  done: 'border-fuchsia-400/70 bg-fuchsia-500/20 text-fuchsia-100',
 };
 
 function sortTasks(tasks: Task[]): Task[] {
@@ -57,7 +57,6 @@ export function KanbanBoard({
     for (const task of tasks) {
       base[task.column_name].push(task);
     }
-    // Each column is already ordered because `tasks` is pre-sorted.
     return base;
   }, [tasks]);
 
@@ -83,7 +82,6 @@ export function KanbanBoard({
     const taskId = Number(draggableId);
     const snapshot = tasks;
 
-    // --- Optimistic update: re-pack indexes in the affected columns ---
     const next = [...tasks];
     const task = next.find((t) => t.id === taskId);
     if (!task) return;
@@ -117,7 +115,6 @@ export function KanbanBoard({
       const data = (await res.json()) as { tasks: Task[] };
       setTasks(sortTasks(data.tasks));
     } catch (err) {
-      // Roll back on failure
       setTasks(snapshot);
       setError(err instanceof Error ? err.message : 'Failed to move task');
     }
@@ -138,13 +135,13 @@ export function KanbanBoard({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <TaskForm projectId={projectId} onCreated={reload} />
 
       {error ? (
         <div
           role="alert"
-          className="rounded border border-red-500/60 bg-red-500/10 px-3 py-2 text-[10px] text-red-300"
+          className="rounded-lg border border-red-500/60 bg-red-500/10 px-3 py-2 text-sm text-red-200"
         >
           {error}
         </div>
@@ -158,19 +155,21 @@ export function KanbanBoard({
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`min-h-[360px] rounded border p-3 transition-colors ${columnStyles[column.key]} ${
-                    dropSnap.isDraggingOver ? 'ring-1 ring-link/60' : ''
+                  className={`min-h-[380px] rounded-xl border p-3 transition-all ${columnStyles[column.key]} ${
+                    dropSnap.isDraggingOver ? 'ring-2 ring-link/70 shadow-glow' : ''
                   }`}
                 >
-                  <div className="mb-3 flex items-center justify-between text-[10px] text-zinc-300">
-                    <span>{column.label}</span>
-                    <span className="text-zinc-500">{grouped[column.key].length}</span>
+                  <div className="mb-3 flex items-center justify-between text-xs text-zinc-200">
+                    <span className="font-mono uppercase tracking-[0.1em]">{column.label}</span>
+                    <span className="rounded-full border border-border px-2 py-0.5 text-zinc-300">
+                      {grouped[column.key].length}
+                    </span>
                   </div>
 
                   <div className="space-y-3">
                     {grouped[column.key].length === 0 ? (
-                      <div className="rounded border border-dashed border-border/60 px-2 py-4 text-center text-[9px] text-zinc-600">
-                        drop tasks here
+                      <div className="rounded-lg border border-dashed border-border/60 px-2 py-5 text-center text-xs text-zinc-400">
+                        Drop tasks here
                       </div>
                     ) : null}
 
@@ -181,33 +180,31 @@ export function KanbanBoard({
                             ref={dragProvided.innerRef}
                             {...dragProvided.draggableProps}
                             {...dragProvided.dragHandleProps}
-                            className={`rounded border border-border bg-card p-3 ${
-                              dragSnap.isDragging ? 'shadow-lg ring-1 ring-link/60' : ''
+                            className={`rounded-lg border border-border bg-cardAlt/90 p-3 shadow-sm transition ${
+                              dragSnap.isDragging ? 'ring-2 ring-link/70 shadow-glow' : 'hover:border-link/55'
                             }`}
                           >
                             <div className="mb-2 flex items-start justify-between gap-2">
-                              <h4 className="break-words text-[10px] text-zinc-100">{task.title}</h4>
+                              <h4 className="break-words text-sm font-medium text-zinc-100">{task.title}</h4>
                               <button
                                 type="button"
                                 onClick={() => removeTask(task.id)}
                                 aria-label={`Delete task: ${task.title}`}
-                                className="shrink-0 text-[9px] text-zinc-500 hover:text-red-400"
+                                className="shrink-0 text-xs text-zinc-400 transition hover:text-red-300"
                               >
                                 delete
                               </button>
                             </div>
                             {task.description ? (
-                              <p className="mb-2 whitespace-pre-wrap break-words text-[9px] leading-relaxed text-zinc-400">
+                              <p className="mb-3 whitespace-pre-wrap break-words text-xs leading-relaxed text-zinc-300">
                                 {task.description}
                               </p>
                             ) : null}
                             <div className="flex items-center justify-between gap-2">
-                              <span className="rounded border border-border bg-zinc-700/30 px-2 py-1 text-[8px] text-zinc-300">
+                              <span className="rounded-full border border-border bg-bg/80 px-2.5 py-1 text-xs text-zinc-200">
                                 {task.assignee || 'unassigned'}
                               </span>
-                              <span
-                                className={`rounded px-2 py-1 text-[8px] ${tagStyles[task.column_name]}`}
-                              >
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] ${tagStyles[task.column_name]}`}>
                                 {task.column_name}
                               </span>
                             </div>

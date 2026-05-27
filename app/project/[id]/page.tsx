@@ -24,25 +24,28 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="break-words text-lg text-zinc-100">{project.title}</h1>
+        <div>
+          <p className="cyber-title mb-2 text-xs text-zinc-400">Project Console</p>
+          <h1 className="break-words text-3xl font-semibold text-white">{project.title}</h1>
+        </div>
         <Link
           href="/"
-          className="rounded border border-border bg-card px-3 py-1 text-[10px] text-link hover:border-link"
+          className="rounded-lg border border-border bg-cardAlt/70 px-4 py-2 text-sm font-medium text-link transition hover:border-link"
         >
           ← Dashboard
         </Link>
       </div>
 
-      <section className="rounded border border-border bg-card p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-sm text-zinc-200">Project Info</h2>
+      <section className="cyber-panel rounded-2xl p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="cyber-title text-sm">Project Info</h2>
           <StatusBadge status={status} />
         </div>
-        <p className="mb-4 whitespace-pre-wrap break-words text-[10px] leading-relaxed text-zinc-400">
+        <p className="mb-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-300">
           {project.description || 'No description provided.'}
         </p>
 
-        <div className="grid gap-3 text-[10px] text-zinc-300 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3">
           <Info label="Engine" value={project.engine} />
           <Info label="Start" value={project.start_date || 'TBD'} />
           <Info label="End" value={project.end_date || 'TBD'} />
@@ -50,7 +53,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm text-zinc-200">Task Board</h2>
+        <h2 className="cyber-title text-sm">Task Board</h2>
         <KanbanBoard initialTasks={tasks} projectId={id} />
       </section>
     </div>
@@ -59,9 +62,9 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-border bg-bg p-3">
-      <div className="mb-1 text-[9px] text-zinc-500">{label}</div>
-      <div className="break-words text-[10px] text-zinc-200">{value}</div>
+    <div className="rounded-xl border border-border bg-cardAlt/75 p-4">
+      <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.11em] text-zinc-400">{label}</div>
+      <div className="break-words text-sm text-zinc-100">{value}</div>
     </div>
   );
 }
