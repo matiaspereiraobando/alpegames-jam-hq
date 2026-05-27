@@ -50,10 +50,19 @@ systemctl daemon-reload
 systemctl restart jam-hq
 systemctl enable jam-hq
 
-# 6. Smoke checks
+# 6. Smoke checks (retry up to 10 times with 3s delay for app startup)
 echo "[6/6] Running smoke checks..."
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ || true)
-HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/api/health || true)
+STATUS="000"
+HEALTH="000"
+for i in $(seq 1 10); do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ 2>/dev/null || true)
+  HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/api/health 2>/dev/null || true)
+  if [ "$STATUS" = "200" ] && [ "$HEALTH" = "200" ]; then
+    break
+  fi
+  echo "  Waiting for app to start... (attempt $i/10, HTTP ${STATUS})"
+  sleep 3
+done
 
 echo ""
 echo "=== Deploy Complete ==="
