@@ -1,0 +1,54 @@
+name: PR CI Check
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [master]
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+      - name: Notify Telegram - Build Passed
+        if: success()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"✅ PR #${{ github.event.pull_request.number }} — build check passed\n\n🔀 ${{ github.event.pull_request.title }}\n👤 ${{ github.event.pull_request.user.login }}\n\nhttps://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}\",
+              \"parse_mode\": \"HTML\"
+            }" || true
+
+      - name: Notify Telegram - Build Failed
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"❌ PR #${{ github.event.pull_request.number }} — build check FAILED\n\n🔀 ${{ github.event.pull_request.title }}\n👤 ${{ github.event.pull_request.user.login }}\n\nhttps://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}\",
+              \"parse_mode\": \"HTML\"
+            }" || true
