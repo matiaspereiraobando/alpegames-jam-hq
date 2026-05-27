@@ -3,6 +3,11 @@ import { ProjectCard } from '@/components/ProjectCard';
 import { listProjects } from '@/lib/db';
 import { getProjectStatus } from '@/lib/utils';
 
+// Dashboard reads from SQLite on every request; do not statically prerender or
+// cache it at build time, otherwise newly-created projects won't show up until
+// the next deploy.
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const projects = listProjects();
   const statusCounts = projects.reduce(

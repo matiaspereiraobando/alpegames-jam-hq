@@ -1,9 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Jam HQ',
   description: 'Alpe Games jam project admin hub',
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0d1117',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

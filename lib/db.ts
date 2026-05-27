@@ -10,7 +10,9 @@ const dbPath = path.join(dataDir, 'jam-hq.db');
 function initDb() {
   fs.mkdirSync(dataDir, { recursive: true });
   const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  db.pragma('synchronous = NORMAL');
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS projects (
@@ -36,6 +38,11 @@ function initDb() {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
+    CREATE INDEX IF NOT EXISTS idx_tasks_project_column_order
+      ON tasks(project_id, column_name, sort_order);
+    CREATE INDEX IF NOT EXISTS idx_projects_created ON projects(created_at DESC);
   `);
 
   return db;
@@ -82,14 +89,25 @@ export function createProject(input: {
   return getProject(result.lastInsertRowid as number)!;
 }
 
+// Merge a partial patch into the current row, ignoring undefined keys so we don't
+// accidentally clobber existing values when the caller didn't mean to update them.
+// `null` is a legitimate value that DOES overwrite (used to clear optional fields).
+function mergeDefined<T extends object>(current: T, patch: Partial<T>): T {
+  const next: T = { ...current };
+  for (const key of Object.keys(patch) as Array<keyof T>) {
+    const value = patch[key];
+    if (value !== undefined) {
+      next[key] = value as T[typeof key];
+    }
+  }
+  return next;
+}
+
 export function updateProject(id: number, patch: Partial<Project>): Project | undefined {
   const current = getProject(id);
   if (!current) return undefined;
 
-  const next = {
-    ...current,
-    ...patch,
-  };
+  const next = mergeDefined(current, patch);
 
   db.prepare(
     `UPDATE projects
@@ -114,6 +132,15 @@ export function updateProject(id: number, patch: Partial<Project>): Project | un
   return getProject(id);
 }
 
+export function deleteProject(id: number): boolean {
+  const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+  return result.changes > 0;
+}
+
+export function getTask(id: number): Task | undefined {
+  return db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Task | undefined;
+}
+
 export function listTasks(projectId: number): Task[] {
   return db
     .prepare(
@@ -125,11 +152,24 @@ export function listTasks(projectId: number): Task[] {
 export function createTask(input: {
   project_id: number;
   title: string;
-  description?: string;
+  description?: string | null;
   column_name?: TaskColumn;
-  assignee?: string;
+  assignee?: string | null;
   sort_order?: number;
 }): Task {
+  const column = input.column_name ?? 'backlog';
+  // Default sort_order to the end of the target column so new tasks land at the bottom
+  // instead of all clumping at position 0.
+  let sortOrder = input.sort_order;
+  if (sortOrder === undefined) {
+    const row = db
+      .prepare(
+        'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM tasks WHERE project_id = ? AND column_name = ?'
+      )
+      .get(input.project_id, column) as { next: number };
+    sortOrder = row.next;
+  }
+
   const insert = db.prepare(
     `INSERT INTO tasks (project_id, title, description, column_name, assignee, sort_order, created_at, updated_at)
      VALUES (@project_id, @title, @description, @column_name, @assignee, @sort_order, datetime('now'), datetime('now'))`
@@ -139,19 +179,22 @@ export function createTask(input: {
     project_id: input.project_id,
     title: input.title,
     description: input.description ?? null,
-    column_name: input.column_name ?? 'backlog',
+    column_name: column,
     assignee: input.assignee ?? null,
-    sort_order: input.sort_order ?? 0,
+    sort_order: sortOrder,
   });
 
-  return db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid) as Task;
+  return getTask(result.lastInsertRowid as number)!;
 }
 
 export function updateTask(id: number, patch: Partial<Task>): Task | undefined {
-  const current = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Task | undefined;
+  const current = getTask(id);
   if (!current) return undefined;
 
-  const next: Task = { ...current, ...patch, id: current.id };
+  const next = mergeDefined(current, patch);
+  // id must never change
+  next.id = current.id;
+  next.project_id = current.project_id;
 
   db.prepare(
     `UPDATE tasks
@@ -171,12 +214,70 @@ export function updateTask(id: number, patch: Partial<Task>): Task | undefined {
     sort_order: next.sort_order,
   });
 
-  return db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Task;
+  return getTask(id);
 }
 
 export function deleteTask(id: number): boolean {
   const result = db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
   return result.changes > 0;
+}
+
+/**
+ * Atomically move a task to a new column/position and re-pack sort_order for
+ * the affected columns so we don't drift into duplicate or sparse values.
+ * Returns the fresh task list for the project.
+ */
+export function moveTask(input: {
+  task_id: number;
+  to_column: TaskColumn;
+  to_index: number;
+}): Task[] | undefined {
+  const task = getTask(input.task_id);
+  if (!task) return undefined;
+
+  const projectId = task.project_id;
+  const fromColumn = task.column_name;
+  const toColumn = input.to_column;
+  const toIndex = Math.max(0, Math.floor(input.to_index));
+
+  const tx = db.transaction(() => {
+    const fetchColumn = db.prepare(
+      'SELECT id FROM tasks WHERE project_id = ? AND column_name = ? ORDER BY sort_order ASC, id ASC'
+    );
+    const updateOrder = db.prepare(
+      "UPDATE tasks SET sort_order = ?, updated_at = datetime('now') WHERE id = ?"
+    );
+    const updateColumn = db.prepare(
+      "UPDATE tasks SET column_name = ?, sort_order = ?, updated_at = datetime('now') WHERE id = ?"
+    );
+
+    if (fromColumn === toColumn) {
+      const ids = (fetchColumn.all(projectId, toColumn) as Array<{ id: number }>).map((r) => r.id);
+      const without = ids.filter((tid) => tid !== input.task_id);
+      const clampedIndex = Math.min(toIndex, without.length);
+      without.splice(clampedIndex, 0, input.task_id);
+      without.forEach((tid, idx) => updateOrder.run(idx, tid));
+    } else {
+      const fromIds = (fetchColumn.all(projectId, fromColumn) as Array<{ id: number }>)
+        .map((r) => r.id)
+        .filter((tid) => tid !== input.task_id);
+      fromIds.forEach((tid, idx) => updateOrder.run(idx, tid));
+
+      const toIds = (fetchColumn.all(projectId, toColumn) as Array<{ id: number }>).map((r) => r.id);
+      const clampedIndex = Math.min(toIndex, toIds.length);
+      toIds.splice(clampedIndex, 0, input.task_id);
+      toIds.forEach((tid, idx) => {
+        if (tid === input.task_id) {
+          updateColumn.run(toColumn, idx, tid);
+        } else {
+          updateOrder.run(idx, tid);
+        }
+      });
+    }
+  });
+
+  tx();
+  return listTasks(projectId);
 }
 
 export function bulkCreateTasks(
@@ -188,16 +289,27 @@ export function bulkCreateTasks(
      VALUES (@project_id, @title, @description, @column_name, @assignee, @sort_order, datetime('now'), datetime('now'))`
   );
 
+  // Track per-column next sort_order so multiple inserts into the same column
+  // get sequential ordering instead of all sharing index 0.
   const tx = db.transaction((items: typeof tasks) => {
-    for (let i = 0; i < items.length; i += 1) {
-      const item = items[i];
+    const counters: Record<string, number> = {};
+    for (const item of items) {
+      const col = item.column_name ?? 'backlog';
+      if (counters[col] === undefined) {
+        const row = db
+          .prepare(
+            'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM tasks WHERE project_id = ? AND column_name = ?'
+          )
+          .get(projectId, col) as { next: number };
+        counters[col] = row.next;
+      }
       create.run({
         project_id: projectId,
         title: item.title,
         description: item.description ?? null,
-        column_name: item.column_name ?? 'backlog',
+        column_name: col,
         assignee: item.assignee ?? null,
-        sort_order: i,
+        sort_order: counters[col]++,
       });
     }
   });

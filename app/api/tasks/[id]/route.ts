@@ -11,14 +11,35 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object') return badRequest('Invalid JSON body');
 
-  const updated = updateTask(taskId, {
-    title: body.title ? String(body.title) : undefined,
-    description: body.description === null ? null : body.description ? String(body.description) : undefined,
-    column_name: parseTaskColumn(body.column_name),
-    assignee: body.assignee === null ? null : body.assignee ? String(body.assignee) : undefined,
-    sort_order: typeof body.sort_order === 'number' ? body.sort_order : undefined,
-  });
+  // Build a patch that only contains keys the caller actually sent — that way the
+  // DB layer can `mergeDefined` and preserve unrelated fields. `null` is allowed
+  // for nullable fields to explicitly clear them.
+  const patch: Parameters<typeof updateTask>[1] = {};
 
+  if ('title' in body) {
+    const title = body.title === null ? '' : String(body.title ?? '').trim();
+    if (!title) return badRequest('title cannot be empty');
+    patch.title = title;
+  }
+  if ('description' in body) {
+    patch.description = body.description === null ? null : String(body.description);
+  }
+  if ('assignee' in body) {
+    patch.assignee = body.assignee === null ? null : String(body.assignee);
+  }
+  if ('column_name' in body) {
+    const col = parseTaskColumn(body.column_name);
+    if (!col) return badRequest('Invalid column_name');
+    patch.column_name = col;
+  }
+  if ('sort_order' in body) {
+    if (typeof body.sort_order !== 'number' || !Number.isFinite(body.sort_order)) {
+      return badRequest('sort_order must be a number');
+    }
+    patch.sort_order = body.sort_order;
+  }
+
+  const updated = updateTask(taskId, patch);
   if (!updated) return notFound('Task not found');
   return NextResponse.json(updated);
 }
