@@ -74,6 +74,7 @@ Restart=on-failure
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=0.0.0.0
+Environment=JAM_HQ_DATA_DIR=/opt/alpegames/jam-hq-data
 
 [Install]
 WantedBy=multi-user.target

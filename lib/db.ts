@@ -4,7 +4,10 @@ import path from 'node:path';
 import { DEFAULT_TASK_TEMPLATES } from './constants';
 import { Project, Task, TaskColumn } from './types';
 
-const dataDir = path.join(process.cwd(), 'data');
+// IMPORTANT: Standalone Next.js runtime may execute from `.next/standalone`,
+// so process.cwd() can change between deploys. Use an explicit persistent
+// data dir via env var to avoid losing state on each rebuild.
+const dataDir = process.env.JAM_HQ_DATA_DIR || path.join(process.cwd(), 'data');
 const dbPath = path.join(dataDir, 'jam-hq.db');
 
 function initDb() {
