@@ -62,8 +62,8 @@ export function TaskForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded border border-border bg-card p-4">
-      <h3 className="text-sm text-zinc-200">Create Task</h3>
+    <form onSubmit={onSubmit} className="cyber-panel space-y-4 rounded-xl bg-gradient-to-b from-card to-cardAlt/80 p-4 md:p-5">
+      <h3 className="cyber-title text-sm">Create Task</h3>
 
       <label className="block">
         <span className="sr-only">Task title</span>
@@ -75,7 +75,7 @@ export function TaskForm({
           maxLength={500}
           required
           aria-label="Task title"
-          className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+          className="cyber-field"
         />
       </label>
 
@@ -88,7 +88,7 @@ export function TaskForm({
           onChange={(e) => setDescription(e.target.value)}
           maxLength={5000}
           aria-label="Task description"
-          className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+          className="cyber-field"
         />
       </label>
 
@@ -99,7 +99,7 @@ export function TaskForm({
             value={assignee}
             onChange={(e) => setAssignee(e.target.value as (typeof ASSIGNEES)[number])}
             aria-label="Assignee"
-            className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+            className="cyber-field"
           >
             {ASSIGNEES.map((name) => (
               <option key={name} value={name}>
@@ -115,7 +115,7 @@ export function TaskForm({
             value={column}
             onChange={(e) => setColumn(e.target.value as TaskColumn)}
             aria-label="Column"
-            className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+            className="cyber-field"
           >
             {TASK_COLUMNS.map((c) => (
               <option key={c.key} value={c.key}>
@@ -128,7 +128,7 @@ export function TaskForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded border border-active bg-active/20 px-3 py-2 text-[10px] text-active transition hover:bg-active/30 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cyber-btn cyber-btn-accent px-3 py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Creating…' : 'Add Task'}
         </button>
@@ -137,7 +137,7 @@ export function TaskForm({
       {error ? (
         <div
           role="alert"
-          className="rounded border border-red-500/60 bg-red-500/10 px-3 py-2 text-[10px] text-red-300"
+          className="rounded-lg border border-red-500/60 bg-red-500/10 px-3 py-2 text-sm text-red-200"
         >
           {error}
         </div>

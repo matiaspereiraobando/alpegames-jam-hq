@@ -26,39 +26,42 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg text-zinc-100">Create New Jam Project</h1>
-        <Link href="/" className="text-[10px] text-link">
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="cyber-kicker mb-2">New Project</p>
+          <h1 className="text-3xl font-semibold text-white">Create Jam Project</h1>
+        </div>
+        <Link href="/" className="cyber-btn cyber-btn-ghost">
           ← Back to Dashboard
         </Link>
       </div>
 
-      <form action={createProject} className="space-y-4 rounded border border-border bg-card p-6">
+      <form action={createProject} className="cyber-panel space-y-5 rounded-2xl p-6 md:p-8">
         <Field label="Title" name="title" required />
 
         <div>
-          <label className="mb-2 block text-[10px] text-zinc-400" htmlFor="description">
+          <label className="mb-2 block text-sm text-zinc-300" htmlFor="description">
             Description
           </label>
           <textarea
             id="description"
             name="description"
             rows={5}
-            className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+            className="cyber-field"
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-2 block text-[10px] text-zinc-400" htmlFor="engine">
+            <label className="mb-2 block text-sm text-zinc-300" htmlFor="engine">
               Engine
             </label>
             <select
               id="engine"
               name="engine"
               defaultValue="Love2D"
-              className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+              className="cyber-field"
             >
               {ENGINES.map((engine) => (
                 <option key={engine} value={engine}>
@@ -72,15 +75,12 @@ export default function NewProjectPage() {
           <Field label="End Date" name="end_date" type="date" />
         </div>
 
-        <div className="rounded border border-border bg-bg p-3 text-[10px] text-zinc-400">
-          Creates default tasks: Set up project structure, Write GDD, Create art assets, Implement core
-          mechanics, Add sound/music, Polish and test, Deploy.
+        <div className="rounded-xl border border-border bg-cardAlt/70 p-4 text-sm text-zinc-300">
+          Default tasks will be created automatically: set up project structure, GDD, art, core mechanics,
+          sound/music, polish/testing, deploy.
         </div>
 
-        <button
-          type="submit"
-          className="rounded border border-active bg-active/20 px-4 py-2 text-[10px] text-active transition hover:bg-active/30"
-        >
+        <button type="submit" className="cyber-btn cyber-btn-accent px-5 py-3">
           Create Project
         </button>
       </form>
@@ -101,7 +101,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] text-zinc-400" htmlFor={name}>
+      <label className="mb-2 block text-sm text-zinc-300" htmlFor={name}>
         {label}
       </label>
       <input
@@ -109,7 +109,7 @@ function Field({
         name={name}
         type={type}
         required={required}
-        className="w-full rounded border border-border bg-bg px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-link"
+        className="cyber-field"
       />
     </div>
   );
