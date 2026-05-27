@@ -34,14 +34,7 @@ npm run build
 # Next standalone does NOT automatically include .next/static assets.
 # Without this copy, production can render unstyled pages (CSS 404).
 echo "[4/6] Syncing static assets for standalone runtime..."
-mkdir -p .next/standalone/.next
-rm -rf .next/standalone/.next/static
-cp -R .next/static .next/standalone/.next/static
-
-if [ -d public ]; then
-  rm -rf .next/standalone/public
-  cp -R public .next/standalone/public
-fi
+bash scripts/prepare-standalone.sh
 
 # 5. Restart service
 echo "[5/6] Restarting Jam HQ service..."

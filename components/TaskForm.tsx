@@ -62,7 +62,7 @@ export function TaskForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="cyber-panel space-y-4 rounded-xl p-4 md:p-5">
+    <form onSubmit={onSubmit} className="cyber-panel space-y-4 rounded-xl bg-gradient-to-b from-card to-cardAlt/80 p-4 md:p-5">
       <h3 className="cyber-title text-sm">Create Task</h3>
 
       <label className="block">
@@ -75,7 +75,7 @@ export function TaskForm({
           maxLength={500}
           required
           aria-label="Task title"
-          className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+          className="cyber-field"
         />
       </label>
 
@@ -88,7 +88,7 @@ export function TaskForm({
           onChange={(e) => setDescription(e.target.value)}
           maxLength={5000}
           aria-label="Task description"
-          className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+          className="cyber-field"
         />
       </label>
 
@@ -99,7 +99,7 @@ export function TaskForm({
             value={assignee}
             onChange={(e) => setAssignee(e.target.value as (typeof ASSIGNEES)[number])}
             aria-label="Assignee"
-            className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+            className="cyber-field"
           >
             {ASSIGNEES.map((name) => (
               <option key={name} value={name}>
@@ -115,7 +115,7 @@ export function TaskForm({
             value={column}
             onChange={(e) => setColumn(e.target.value as TaskColumn)}
             aria-label="Column"
-            className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+            className="cyber-field"
           >
             {TASK_COLUMNS.map((c) => (
               <option key={c.key} value={c.key}>
@@ -128,7 +128,7 @@ export function TaskForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg border border-active/80 bg-active/15 px-3 py-2.5 text-sm font-semibold text-active transition hover:bg-active/25 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cyber-btn cyber-btn-accent px-3 py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Creating…' : 'Add Task'}
         </button>

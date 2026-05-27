@@ -9,7 +9,7 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/project/${project.id}`}
-      className="cyber-panel block rounded-xl p-5 transition hover:-translate-y-0.5 hover:border-link/80 hover:shadow-glow"
+      className="cyber-panel block rounded-xl bg-gradient-to-b from-card to-cardAlt/80 p-5 transition hover:-translate-y-0.5 hover:border-link/80 hover:shadow-glow"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <h3 className="text-lg font-semibold text-zinc-100">{project.title}</h3>
@@ -21,7 +21,7 @@ export function ProjectCard({ project }: { project: Project }) {
       </p>
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-        <span className="rounded-full border border-border bg-cardAlt/80 px-2.5 py-1">{project.engine}</span>
+        <span className="cyber-chip">{project.engine}</span>
         <span>•</span>
         <span>{project.start_date || 'TBD'}</span>
         <span>→</span>

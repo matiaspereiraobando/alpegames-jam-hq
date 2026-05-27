@@ -25,13 +25,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="cyber-title mb-2 text-xs text-zinc-400">Project Console</p>
+          <p className="cyber-kicker mb-2">Project Console</p>
           <h1 className="break-words text-3xl font-semibold text-white">{project.title}</h1>
         </div>
-        <Link
-          href="/"
-          className="rounded-lg border border-border bg-cardAlt/70 px-4 py-2 text-sm font-medium text-link transition hover:border-link"
-        >
+        <Link href="/" className="cyber-btn cyber-btn-ghost">
           ← Dashboard
         </Link>
       </div>
@@ -62,7 +59,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-cardAlt/75 p-4">
+    <div className="rounded-xl border border-border bg-gradient-to-b from-cardAlt/95 to-card/85 p-4">
       <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.11em] text-zinc-400">{label}</div>
       <div className="break-words text-sm text-zinc-100">{value}</div>
     </div>

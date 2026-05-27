@@ -155,13 +155,13 @@ export function KanbanBoard({
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`min-h-[380px] rounded-xl border p-3 transition-all ${columnStyles[column.key]} ${
+                  className={`min-h-[380px] rounded-xl border bg-gradient-to-b p-3 transition-all ${columnStyles[column.key]} ${
                     dropSnap.isDraggingOver ? 'ring-2 ring-link/70 shadow-glow' : ''
                   }`}
                 >
                   <div className="mb-3 flex items-center justify-between text-xs text-zinc-200">
                     <span className="font-mono uppercase tracking-[0.1em]">{column.label}</span>
-                    <span className="rounded-full border border-border px-2 py-0.5 text-zinc-300">
+                    <span className="cyber-chip px-2 py-0.5 text-zinc-300">
                       {grouped[column.key].length}
                     </span>
                   </div>
@@ -201,7 +201,7 @@ export function KanbanBoard({
                               </p>
                             ) : null}
                             <div className="flex items-center justify-between gap-2">
-                              <span className="rounded-full border border-border bg-bg/80 px-2.5 py-1 text-xs text-zinc-200">
+                              <span className="cyber-chip bg-bg/80 text-zinc-200">
                                 {task.assignee || 'unassigned'}
                               </span>
                               <span className={`rounded-full border px-2.5 py-1 text-[11px] ${tagStyles[task.column_name]}`}>
