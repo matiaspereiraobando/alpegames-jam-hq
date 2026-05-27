@@ -71,6 +71,26 @@ npm run build
 systemctl restart jam-hq
 ```
 
+### Standalone static assets (critical)
+
+Jam HQ uses `output: 'standalone'`. In this mode, Next.js runtime files are emitted under `.next/standalone`, but static frontend assets still live under `.next/static` unless explicitly copied.
+
+If `.next/static` is missing from the runtime tree, pages can load as plain white/black unstyled HTML because CSS/JS files under `/_next/static/...` return 404.
+
+This repository now guarantees the copy in two places:
+
+- `npm run build` runs `postbuild` → `scripts/prepare-standalone.sh`
+- `scripts/deploy.sh` also runs `scripts/prepare-standalone.sh`
+
+Manual check:
+
+```bash
+test -d .next/standalone/.next/static && echo "static assets present"
+find .next/standalone/.next/static -type f | head
+```
+
+Health endpoint `/api/health` reports whether `.next/static` and `public/` are present at runtime.
+
 ## Project Structure
 
 ```
