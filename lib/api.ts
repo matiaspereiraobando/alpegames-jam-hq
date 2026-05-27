@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { ProjectStatus, TaskColumn } from './types';
+import { NextRequest, NextResponse } from 'next/server';
+import type { ProjectStatus, TaskColumn } from './types.ts';
 
 export function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
@@ -28,4 +28,33 @@ export function parseProjectStatus(value: unknown): ProjectStatus | undefined {
 export function parseTaskColumn(value: unknown): TaskColumn | undefined {
   if (typeof value !== 'string') return undefined;
   return (TASK_COLUMNS as readonly string[]).includes(value) ? (value as TaskColumn) : undefined;
+}
+
+export function unauthorized(message = 'Unauthorized') {
+  return NextResponse.json({ error: message }, { status: 401 });
+}
+
+export function forbidden(message = 'Forbidden') {
+  return NextResponse.json({ error: message }, { status: 403 });
+}
+
+export function parseOptionalInt(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isInteger(parsed)) return undefined;
+  return parsed;
+}
+
+export function requireBearerToken(request: NextRequest, expectedToken?: string | null) {
+  if (!expectedToken) {
+    return forbidden('JAMHQ_ADMIN_TOKEN is not configured');
+  }
+
+  const header = request.headers.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
+  if (token !== expectedToken) {
+    return unauthorized();
+  }
+
+  return null;
 }
