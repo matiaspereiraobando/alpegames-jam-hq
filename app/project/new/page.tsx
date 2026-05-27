@@ -29,10 +29,10 @@ export default function NewProjectPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="cyber-title mb-2 text-xs text-zinc-400">New Project</p>
+          <p className="cyber-kicker mb-2">New Project</p>
           <h1 className="text-3xl font-semibold text-white">Create Jam Project</h1>
         </div>
-        <Link href="/" className="rounded-lg border border-border bg-cardAlt/70 px-4 py-2 text-sm text-link">
+        <Link href="/" className="cyber-btn cyber-btn-ghost">
           ← Back to Dashboard
         </Link>
       </div>
@@ -48,7 +48,7 @@ export default function NewProjectPage() {
             id="description"
             name="description"
             rows={5}
-            className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+            className="cyber-field"
           />
         </div>
 
@@ -61,7 +61,7 @@ export default function NewProjectPage() {
               id="engine"
               name="engine"
               defaultValue="Love2D"
-              className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+              className="cyber-field"
             >
               {ENGINES.map((engine) => (
                 <option key={engine} value={engine}>
@@ -80,10 +80,7 @@ export default function NewProjectPage() {
           sound/music, polish/testing, deploy.
         </div>
 
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center rounded-lg border border-active/80 bg-active/15 px-5 py-3 text-sm font-semibold text-active transition hover:bg-active/25 focus-visible:ring-2 focus-visible:ring-active/70"
-        >
+        <button type="submit" className="cyber-btn cyber-btn-accent px-5 py-3">
           Create Project
         </button>
       </form>
@@ -112,7 +109,7 @@ function Field({
         name={name}
         type={type}
         required={required}
-        className="w-full rounded-lg border border-border bg-bg/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-link"
+        className="cyber-field"
       />
     </div>
   );

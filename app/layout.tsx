@@ -18,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="text-zinc-100">
         <div className="pointer-events-none fixed inset-0 -z-10 bg-grid bg-[size:42px_42px] opacity-25" />
-        <main className="mx-auto min-h-screen max-w-[1480px] px-4 py-6 md:px-8 md:py-10">{children}</main>
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.10),transparent_42%)]" />
+        <main className="mx-auto min-h-screen max-w-[1480px] px-4 py-6 md:px-8 md:py-10">
+          <div className="cyber-shell">{children}</div>
+        </main>
       </body>
     </html>
   );

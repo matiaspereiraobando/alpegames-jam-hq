@@ -20,22 +20,19 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header className="cyber-panel relative overflow-hidden rounded-2xl p-6 md:p-8">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-blue-500/5 to-purple-400/10" />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
-            <p className="cyber-title text-xs text-link">Operations Dashboard</p>
+            <p className="cyber-kicker">Operations Dashboard</p>
             <h1 className="text-3xl font-semibold leading-tight text-white md:text-4xl">Jam HQ</h1>
             <p className="max-w-2xl cyber-muted">
               Retro-cyber control room for Alpe Games jams. Track momentum, keep priorities visible, and ship on
               time.
             </p>
           </div>
-          <Link
-            href="/project/new"
-            className="inline-flex items-center justify-center rounded-lg border border-link/60 bg-link/15 px-5 py-3 text-sm font-semibold text-link transition hover:border-link hover:bg-link/25 focus-visible:ring-2 focus-visible:ring-link/70"
-          >
+          <Link href="/project/new" className="cyber-btn cyber-btn-primary px-5 py-3">
             + Create New Jam
           </Link>
         </div>
@@ -50,7 +47,7 @@ export default function DashboardPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="cyber-title text-sm">Projects</h2>
+          <h2 className="cyber-title text-sm">Projects Registry</h2>
           <p className="text-sm text-zinc-400">{projects.length} tracked</p>
         </div>
 
@@ -72,7 +69,7 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <article className="cyber-panel rounded-xl p-4">
+    <article className="cyber-panel rounded-xl bg-gradient-to-b from-card to-cardAlt/80 p-4">
       <p className="font-mono text-xs uppercase tracking-[0.12em] text-zinc-400">{label}</p>
       <p className={`mt-2 text-3xl font-semibold ${tone}`}>{value}</p>
     </article>
