@@ -4,6 +4,7 @@
 set -euo pipefail
 
 APP_DIR="/opt/alpegames/jam-hq"
+DATA_DIR="/opt/alpegames/jam-hq-data"
 REPO="https://github.com/matiaspereiraobando/alpegames-jam-hq.git"
 
 echo "=== Deploying Jam HQ ==="
@@ -36,8 +37,15 @@ npm run build
 echo "[4/6] Syncing static assets for standalone runtime..."
 bash scripts/prepare-standalone.sh
 
-# 5. Restart service
+# 5. Ensure persistent data dir + restart service
 echo "[5/6] Restarting Jam HQ service..."
+mkdir -p "$DATA_DIR"
+
+# If an old DB exists under app dir but persistent DB does not, migrate once.
+if [ -f "$APP_DIR/data/jam-hq.db" ] && [ ! -f "$DATA_DIR/jam-hq.db" ]; then
+  cp "$APP_DIR/data/jam-hq.db" "$DATA_DIR/jam-hq.db"
+fi
+
 systemctl daemon-reload
 systemctl restart jam-hq
 systemctl enable jam-hq
