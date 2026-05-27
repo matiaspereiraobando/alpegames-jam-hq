@@ -22,6 +22,9 @@ if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
   fi
 fi
 
+# Fallback: TELEGRAM_HOME_CHANNEL (systemd) -> TELEGRAM_CHAT_ID (script)
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-${TELEGRAM_HOME_CHANNEL:-}}"
+
 if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
   echo "WARNING: TELEGRAM_BOT_TOKEN not set; GitHub secrets will not be configured."
 fi
@@ -61,7 +64,15 @@ fi
 # 4. Set up VPS game directory
 echo "[4/5] Preparing VPS game directory..."
 JAM_SLUG="$(printf '%03d' "$JAM_NUMBER")"
-ssh -i "$HOME/.ssh/id_ed25519_jamhq" -o ConnectTimeout=10 "root@$VPS_HOST" "mkdir -p /opt/alpegames/games/jam-$JAM_SLUG" 2>/dev/null && echo "  VPS directory created" || echo "  VPS directory skipped (SSH failed)"
+JAM_GAME_DIR="/opt/alpegames/games/jam-$JAM_SLUG"
+LOCAL_HOSTNAME=$(hostname 2>/dev/null || echo "")
+if [[ "$LOCAL_HOSTNAME" == *"ubuntu-s-1vcpu"* ]] || [[ -d /opt/alpegames ]]; then
+  # Running on the VPS — create directly
+  mkdir -p "$JAM_GAME_DIR" && echo "  VPS directory created: $JAM_GAME_DIR" || echo "  VPS directory creation failed"
+else
+  # Running locally — SSH to VPS
+  ssh -i "$HOME/.ssh/id_ed25519_jamhq" -o ConnectTimeout=10 "root@$VPS_HOST" "mkdir -p $JAM_GAME_DIR" 2>/dev/null && echo "  VPS directory created" || echo "  VPS directory skipped (SSH failed)"
+fi
 
 # 5. Register in Jam HQ (skip if triggered from Jam HQ to prevent loop)
 if [[ "$SKIP_HQ_REGISTER" == "--skip-hq-register" ]]; then
