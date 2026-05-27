@@ -1,0 +1,113 @@
+# Alpe Games Jam HQ
+
+Central command for [Alpe Games](https://alpegames.cl) game jam projects.
+
+Jam HQ is a lightweight admin app for managing 10–15 day game jams. Create projects, track tasks on a kanban board, and manage your game development pipeline — all from a single dashboard.
+
+## Live
+
+**[jam.alpegames.cl](https://jam.alpegames.cl)**
+
+## Features
+
+- **Dashboard** — Overview of all jam projects with status (upcoming / active / completed)
+- **Kanban Board** — Drag-and-drop task management across BACKLOG → TODO → IN PROGRESS → DONE
+- **Project Management** — Create, edit, and delete jam projects with engine, dates, and descriptions
+- **Task Assignment** — Assign tasks to team members (matias / friend)
+- **REST API** — Full API for automation (Matobot integration)
+- **Dark Retro Theme** — Gaming-inspired UI with pixel-style aesthetics
+
+## Tech Stack
+
+- **Next.js 14** (App Router, TypeScript)
+- **SQLite** via better-sqlite3 (no external DB)
+- **Tailwind CSS** (dark theme)
+- **@hello-pangea/dnd** (drag-and-drop kanban)
+- **Nginx** reverse proxy with Let's Encrypt SSL
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/projects` | List all projects |
+| POST | `/api/projects` | Create a project |
+| GET | `/api/projects/[id]` | Get project details |
+| PATCH | `/api/projects/[id]` | Update a project |
+| DELETE | `/api/projects/[id]` | Delete a project |
+| GET | `/api/projects/[id]/tasks` | List tasks for a project |
+| POST | `/api/projects/[id]/tasks` | Create a task |
+| POST | `/api/projects/[id]/tasks/bulk` | Bulk create tasks |
+| PATCH | `/api/tasks/[id]` | Update a task |
+| DELETE | `/api/tasks/[id]` | Delete a task |
+| POST | `/api/tasks/[id]/move` | Move task between columns |
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production build
+npm start
+```
+
+## Deployment
+
+The app runs on a DigitalOcean VPS as a systemd service.
+
+```bash
+# Deploy to VPS
+ssh root@161.35.55.246
+cd /opt/alpegames/jam-hq
+git pull origin master
+npm ci
+npm run build
+systemctl restart jam-hq
+```
+
+## Project Structure
+
+```
+alpegames-jam-hq/
+├── app/
+│   ├── api/              # REST API routes
+│   │   ├── projects/     # Project CRUD
+│   │   └── tasks/        # Task CRUD + move
+│   ├── project/
+│   │   ├── [id]/         # Project detail (kanban)
+│   │   └── new/          # Create project form
+│   ├── globals.css       # Tailwind + retro theme
+│   ├── layout.tsx        # Root layout
+│   └── page.tsx          # Dashboard
+├── components/
+│   ├── KanbanBoard.tsx   # Drag-and-drop kanban
+│   ├── ProjectCard.tsx   # Project cards
+│   ├── StatusBadge.tsx   # Status indicators
+│   └── TaskForm.tsx      # Task creation form
+├── lib/
+│   ├── db.ts             # SQLite database layer
+│   ├── api.ts            # API client helpers
+│   ├── types.ts          # TypeScript types
+│   ├── constants.ts      # App constants
+│   └── utils.ts          # Utility functions
+├── data/
+│   └── jam-hq.db         # SQLite database (auto-created)
+└── scripts/
+    ├── vps-setup.sh      # VPS initial setup
+    └── deploy.sh         # Deployment script
+```
+
+## Part of the Alpe Games Ecosystem
+
+- **[alpegames-jam-template](https://github.com/matiaspereiraobando/alpegames-jam-template)** — Template for new jam projects
+- **[alpegames-jam-000-hello-world](https://github.com/matiaspereiraobando/alpegames-jam-000-hello-world)** — Jam #0 test game (Love2D)
+
+## License
+
+Internal project for Alpe Games.
