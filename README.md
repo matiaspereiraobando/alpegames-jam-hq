@@ -145,3 +145,4 @@ alpegames-jam-hq/
 ## License
 
 Internal project for Alpe Games.
+# Jam HQ
