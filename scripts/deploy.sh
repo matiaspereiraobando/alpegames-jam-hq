@@ -15,7 +15,8 @@ if [ -d "$APP_DIR/.git" ]; then
     cd "$APP_DIR"
     git fetch origin
     git checkout master
-    git pull --ff-only origin master
+    # Force-sync with remote to handle history rewrites (e.g. secret scrubbing)
+    git reset --hard origin/master
 else
     echo "[1/6] Cloning repository..."
     git clone "$REPO" "$APP_DIR"
