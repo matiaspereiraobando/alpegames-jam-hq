@@ -1,0 +1,17 @@
+[Unit]
+Description=Jam HQ automation worker
+After=network.target jam-hq.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/alpegames/jam-hq
+ExecStart=/usr/bin/node /opt/alpegames/jam-hq/scripts/worker.mjs
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=JAM_HQ_DATA_DIR=/opt/alpegames/jam-hq-data
+Environment=JAMHQ_AUTOMATION_LOG_DIR=/var/log/jamhq-automation
+
+[Install]
+WantedBy=multi-user.target

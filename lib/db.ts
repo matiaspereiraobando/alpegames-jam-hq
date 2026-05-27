@@ -1,14 +1,25 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
-import { DEFAULT_TASK_TEMPLATES } from './constants';
-import { Project, Task, TaskColumn } from './types';
+import { DEFAULT_TASK_TEMPLATES } from './constants.ts';
+import type { Project, Task, TaskColumn } from './types.ts';
 
 // IMPORTANT: Standalone Next.js runtime may execute from `.next/standalone`,
 // so process.cwd() can change between deploys. Use an explicit persistent
 // data dir via env var to avoid losing state on each rebuild.
 const dataDir = process.env.JAM_HQ_DATA_DIR || path.join(process.cwd(), 'data');
 const dbPath = path.join(dataDir, 'jam-hq.db');
+
+function tryExec(db: Database.Database, sql: string) {
+  try {
+    db.exec(sql);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes('duplicate column name')) {
+      throw error;
+    }
+  }
+}
 
 function initDb() {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -48,6 +59,46 @@ function initDb() {
     CREATE INDEX IF NOT EXISTS idx_projects_created ON projects(created_at DESC);
   `);
 
+  tryExec(db, 'ALTER TABLE projects ADD COLUMN jam_number INTEGER;');
+  tryExec(db, 'ALTER TABLE projects ADD COLUMN jam_slug TEXT;');
+
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_jam_number
+      ON projects(jam_number) WHERE jam_number IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS automation_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+      source TEXT NOT NULL DEFAULT 'api'
+        CHECK(source IN ('api', 'script', 'manual')),
+      status TEXT NOT NULL DEFAULT 'pending'
+        CHECK(status IN ('pending', 'running', 'success', 'failed', 'cancelled')),
+      payload TEXT NOT NULL,
+      result TEXT,
+      error TEXT,
+      log_path TEXT,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      max_attempts INTEGER NOT NULL DEFAULT 3,
+      next_attempt_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      started_at TEXT,
+      finished_at TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_events_pending
+      ON automation_events(status, next_attempt_at)
+      WHERE status = 'pending';
+
+    CREATE INDEX IF NOT EXISTS idx_events_project
+      ON automation_events(project_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_automation_events_project_active
+      ON automation_events(type, project_id)
+      WHERE project_id IS NOT NULL AND status IN ('pending', 'running', 'success');
+  `);
+
   return db;
 }
 
@@ -59,7 +110,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 export function listProjects(): Project[] {
   return db
-    .prepare('SELECT * FROM projects ORDER BY datetime(created_at) DESC')
+    .prepare('SELECT * FROM projects ORDER BY COALESCE(jam_number, 0) DESC, datetime(created_at) DESC')
     .all() as Project[];
 }
 
@@ -74,10 +125,34 @@ export function createProject(input: {
   status?: Project['status'];
   start_date?: string;
   end_date?: string;
+  jam_number?: number | null;
+  jam_slug?: string | null;
 }): Project {
   const stmt = db.prepare(
-    `INSERT INTO projects (title, description, engine, status, start_date, end_date, created_at, updated_at)
-     VALUES (@title, @description, @engine, @status, @start_date, @end_date, datetime('now'), datetime('now'))`
+    `INSERT INTO projects (
+      title,
+      description,
+      engine,
+      status,
+      start_date,
+      end_date,
+      jam_number,
+      jam_slug,
+      created_at,
+      updated_at
+    )
+     VALUES (
+      @title,
+      @description,
+      @engine,
+      @status,
+      @start_date,
+      @end_date,
+      @jam_number,
+      @jam_slug,
+      datetime('now'),
+      datetime('now')
+    )`
   );
 
   const result = stmt.run({
@@ -87,6 +162,8 @@ export function createProject(input: {
     status: input.status ?? 'active',
     start_date: input.start_date ?? null,
     end_date: input.end_date ?? null,
+    jam_number: input.jam_number ?? null,
+    jam_slug: input.jam_slug ?? null,
   });
 
   return getProject(result.lastInsertRowid as number)!;
@@ -120,6 +197,8 @@ export function updateProject(id: number, patch: Partial<Project>): Project | un
          status = @status,
          start_date = @start_date,
          end_date = @end_date,
+         jam_number = @jam_number,
+         jam_slug = @jam_slug,
          updated_at = datetime('now')
      WHERE id = @id`
   ).run({
@@ -130,6 +209,8 @@ export function updateProject(id: number, patch: Partial<Project>): Project | un
     status: next.status,
     start_date: next.start_date,
     end_date: next.end_date,
+    jam_number: next.jam_number,
+    jam_slug: next.jam_slug,
   });
 
   return getProject(id);
@@ -327,6 +408,8 @@ export function createProjectWithDefaultTasks(input: {
   engine?: string;
   start_date?: string;
   end_date?: string;
+  jam_number?: number | null;
+  jam_slug?: string | null;
 }) {
   const project = createProject(input);
   bulkCreateTasks(
@@ -337,4 +420,12 @@ export function createProjectWithDefaultTasks(input: {
     }))
   );
   return project;
+}
+
+export function getMaxJamNumber(): number | null {
+  const row = db
+    .prepare('SELECT MAX(jam_number) AS max_jam_number FROM projects WHERE jam_number IS NOT NULL')
+    .get() as { max_jam_number: number | null };
+
+  return row.max_jam_number ?? null;
 }
