@@ -40,6 +40,8 @@ Jam HQ is a lightweight admin app for managing 10–15 day game jams. Create pro
 | PATCH | `/api/tasks/[id]` | Update a task |
 | DELETE | `/api/tasks/[id]` | Delete a task |
 | POST | `/api/tasks/[id]/move` | Move task between columns |
+| GET | `/api/automation/events` | List automation events |
+| POST | `/api/automation/events/[id]/retry` | Retry a failed automation event (Bearer token) |
 
 ## Local Development
 
@@ -90,6 +92,18 @@ find .next/standalone/.next/static -type f | head
 ```
 
 Health endpoint `/api/health` reports whether `.next/static` and `public/` are present at runtime.
+
+### Automation worker
+
+Jam HQ now includes a SQLite-backed automation queue and a dedicated worker service.
+
+- `POST /api/projects` creates the project, stores `jam_number` / `jam_slug`, enqueues `project.created`, and still returns `201` immediately even if enqueueing fails.
+- `GET /api/automation/events` exposes recent worker history.
+- `POST /api/automation/events/[id]/retry` resets a failed event to `pending` and requires `Authorization: Bearer $JAMHQ_ADMIN_TOKEN`.
+- `scripts/create-jam-repo.sh` accepts `--skip-hq-register` and tags script-originated API calls with `X-Jamhq-Automation-Source: script` to avoid loops.
+- `scripts/jamhq-automation-worker.service` runs `node scripts/worker.mjs` under systemd.
+
+Deploys install and enable the worker automatically via `scripts/deploy.sh`.
 
 ## Project Structure
 

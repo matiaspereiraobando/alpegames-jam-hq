@@ -37,18 +37,23 @@ npm run build
 echo "[4/6] Syncing static assets for standalone runtime..."
 bash scripts/prepare-standalone.sh
 
-# 5. Ensure persistent data dir + restart service
-echo "[5/6] Restarting Jam HQ service..."
+# 5. Ensure persistent data dir + restart services
+echo "[5/6] Restarting Jam HQ services..."
 mkdir -p "$DATA_DIR"
+mkdir -p /var/log/jamhq-automation
 
 # If an old DB exists under app dir but persistent DB does not, migrate once.
 if [ -f "$APP_DIR/data/jam-hq.db" ] && [ ! -f "$DATA_DIR/jam-hq.db" ]; then
   cp "$APP_DIR/data/jam-hq.db" "$DATA_DIR/jam-hq.db"
 fi
 
+install -m 0644 scripts/jamhq-automation-worker.service /etc/systemd/system/jamhq-automation-worker.service
+
 systemctl daemon-reload
 systemctl restart jam-hq
 systemctl enable jam-hq
+systemctl restart jamhq-automation-worker
+systemctl enable jamhq-automation-worker
 
 # 6. Smoke checks (retry up to 10 times with 3s delay for app startup)
 echo "[6/6] Running smoke checks..."
