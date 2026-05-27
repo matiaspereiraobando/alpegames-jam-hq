@@ -1,0 +1,60 @@
+name: Deploy to Production
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '*.md'
+      - '.github/**'
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Notify Telegram - Deploy Started
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"🚀 Deploy started\n\n📦 ${{ github.event.head_commit.message }}\n🔗 https://github.com/${{ github.repository }}/commit/${{ github.sha }}\",
+              \"parse_mode\": \"HTML\"
+            }" || true
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/alpegames/jam-hq
+            git fetch origin
+            git checkout master
+            git pull --ff-only origin master
+            bash scripts/deploy.sh
+
+      - name: Notify Telegram - Deploy Success
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"✅ Deploy complete!\n\n📦 ${{ github.event.head_commit.message }}\n🌐 https://jam.alpegames.cl\",
+              \"parse_mode\": \"HTML\"
+            }" || true
+
+      - name: Notify Telegram - Deploy Failed
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"❌ Deploy FAILED!\n\n📦 ${{ github.event.head_commit.message }}\n🔗 https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
+              \"parse_mode\": \"HTML\"
+            }" || true
