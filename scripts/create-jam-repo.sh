@@ -17,7 +17,7 @@ WORKSPACE="/root/alpegames-jam-projects"
 if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
   HERMES_ENV="$HOME/.hermes/.env"
   if [[ -f "$HERMES_ENV" ]]; then
-    TELEGRAM_BOT_TOKEN=*** '^TELEGRAM_BOT_TOKEN=*** "$HERMES_ENV" | cut -d= -f2)
+    TELEGRAM_BOT_TOKEN=$(grep '^TELEGRAM_BOT_TOKEN=' "$HERMES_ENV" | cut -d= -f2)
     TELEGRAM_CHAT_ID=$(grep '^TELEGRAM_HOME_CHANNEL=' "$HERMES_ENV" | cut -d= -f2)
   fi
 fi
