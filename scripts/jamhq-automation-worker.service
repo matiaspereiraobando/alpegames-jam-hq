@@ -9,11 +9,7 @@ WorkingDirectory=/opt/alpegames/jam-hq
 ExecStart=/usr/bin/npx tsx scripts/worker.mjs
 Restart=always
 RestartSec=5
-Environment=NODE_ENV=production
-Environment=JAM_HQ_DATA_DIR=/opt/alpegames/jam-hq-data
-Environment=JAMHQ_AUTOMATION_LOG_DIR=/var/log/jamhq-automation
-Environment=TELEGRAM_BOT_TOKEN=[REDACTED]
-Environment=TELEGRAM_HOME_CHANNEL=[REDACTED_CHAT_ID]
+EnvironmentFile=/opt/alpegames/jam-hq/.env.worker
 
 [Install]
 WantedBy=multi-user.target
