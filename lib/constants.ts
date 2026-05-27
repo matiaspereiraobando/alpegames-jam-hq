@@ -1,4 +1,4 @@
-import { TaskColumn } from './types';
+import type { TaskColumn } from './types.ts';
 
 export const TASK_COLUMNS: Array<{ key: TaskColumn; label: string }> = [
   { key: 'backlog', label: 'BACKLOG' },
