@@ -3,9 +3,6 @@ import { ProjectCard } from '@/components/ProjectCard';
 import { listProjects } from '@/lib/db';
 import { getProjectStatus } from '@/lib/utils';
 
-// Dashboard reads from SQLite on every request; do not statically prerender or
-// cache it at build time, otherwise newly-created projects won't show up until
-// the next deploy.
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
@@ -16,37 +13,50 @@ export default function DashboardPage() {
       acc.total += 1;
       if (computed === 'active') acc.active += 1;
       if (computed === 'completed') acc.completed += 1;
+      if (computed === 'upcoming') acc.upcoming += 1;
       return acc;
     },
-    { total: 0, active: 0, completed: 0 }
+    { total: 0, active: 0, completed: 0, upcoming: 0 }
   );
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 rounded border border-border bg-card p-6 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="mb-2 text-xl text-zinc-100">Jam HQ</h1>
-          <p className="text-[10px] text-zinc-400">Central command for Alpe Games jam projects.</p>
+      <header className="cyber-panel relative overflow-hidden rounded-2xl p-6 md:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-blue-500/5 to-purple-400/10" />
+        <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-3">
+            <p className="cyber-title text-xs text-link">Operations Dashboard</p>
+            <h1 className="text-3xl font-semibold leading-tight text-white md:text-4xl">Jam HQ</h1>
+            <p className="max-w-2xl cyber-muted">
+              Retro-cyber control room for Alpe Games jams. Track momentum, keep priorities visible, and ship on
+              time.
+            </p>
+          </div>
+          <Link
+            href="/project/new"
+            className="inline-flex items-center justify-center rounded-lg border border-link/60 bg-link/15 px-5 py-3 text-sm font-semibold text-link transition hover:border-link hover:bg-link/25 focus-visible:ring-2 focus-visible:ring-link/70"
+          >
+            + Create New Jam
+          </Link>
         </div>
-        <Link
-          href="/project/new"
-          className="inline-flex items-center rounded border border-active bg-active/20 px-4 py-2 text-[10px] text-active transition hover:bg-active/30"
-        >
-          + Create New Jam
-        </Link>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label="TOTAL JAMS" value={statusCounts.total} color="text-zinc-200" />
-        <StatCard label="ACTIVE" value={statusCounts.active} color="text-active" />
-        <StatCard label="COMPLETED" value={statusCounts.completed} color="text-completed" />
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total Projects" value={statusCounts.total} tone="text-zinc-100" />
+        <StatCard label="Active" value={statusCounts.active} tone="text-active" />
+        <StatCard label="Upcoming" value={statusCounts.upcoming} tone="text-link" />
+        <StatCard label="Completed" value={statusCounts.completed} tone="text-completed" />
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm text-zinc-200">All Projects</h2>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="cyber-title text-sm">Projects</h2>
+          <p className="text-sm text-zinc-400">{projects.length} tracked</p>
+        </div>
+
         {projects.length === 0 ? (
-          <div className="rounded border border-dashed border-border bg-card p-6 text-[10px] text-zinc-400">
-            No jam projects yet. Create one to get started.
+          <div className="cyber-panel rounded-xl border-dashed p-8 text-center text-zinc-300">
+            No jam projects yet. Create your first jam to initialize the board.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -60,11 +70,11 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="rounded border border-border bg-card p-4">
-      <p className="mb-2 text-[10px] text-zinc-500">{label}</p>
-      <p className={`text-lg ${color}`}>{value}</p>
-    </div>
+    <article className="cyber-panel rounded-xl p-4">
+      <p className="font-mono text-xs uppercase tracking-[0.12em] text-zinc-400">{label}</p>
+      <p className={`mt-2 text-3xl font-semibold ${tone}`}>{value}</p>
+    </article>
   );
 }
